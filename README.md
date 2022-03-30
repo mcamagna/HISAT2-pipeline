@@ -1,10 +1,9 @@
-# **How to use the RNA-seq pipline**
-
-The following document will give you an explanation of how to use the pipeline. If you encounter problems or would like to want me to make changes to the pipeline, feel free to contact me.
+# HISAT2-pipeline
+The following document will give you an explanation of how to use the pipeline. If you encounter problems or would like me to make changes to the pipeline, feel free to contact me.
 
 ## 1. Prerequisites:
 
-The script will work on Linux and Mac. In order to run the program, the following programs/libraries need to be installed on your system:
+The script will work on Linux and MacOS. In order to run the program, the following programs/libraries need to be installed on your system:
 
 *Python (any version ≥ 3)\
 HISAT2\
