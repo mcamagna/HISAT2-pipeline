@@ -171,7 +171,8 @@ def mapToGenome(samples, genome, mappingFolder):
 		
 		print(cmd)
 		os.system(cmd)
-
+		#immediately convert the SAM to BAM
+		convertToBAM(mappingFolder)
 
 
 def getGFFFile(folder="folder"):
