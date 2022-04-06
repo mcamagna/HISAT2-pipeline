@@ -551,7 +551,7 @@ def checkIfAllPrerequisitesInstalled():
 		
 
 
-print("RNAseq Pipline by Maurizio Camagna - Version 2022/03 ")
+print("RNAseq Pipline by Maurizio Camagna - Version 1.0.0 (2022/03) ")
 print("(camagna.maurizio@gmail.com)")
 print("")
 
