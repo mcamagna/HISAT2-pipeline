@@ -55,3 +55,9 @@ Once stringtie has finished, you’ll find the gene expression values in the fol
 ## 3. Additional parameters
 
 Run python Pipeline.py -h to see additional commands
+
+
+## 4. Citing
+
+If you use this software for your scientific research, please cite it.
+Refer to the **about** section for informations on how to cite this software.
