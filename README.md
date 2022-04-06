@@ -1,4 +1,4 @@
-# HISAT2-pipeline
+# HISAT2-pipeline [![DOI](https://zenodo.org/badge/475739892.svg)](https://zenodo.org/badge/latestdoi/475739892)
 The following document will give you an explanation of how to use the pipeline. If you encounter problems or would like me to make changes to the pipeline, feel free to contact me.
 
 ## 1. Prerequisites:
