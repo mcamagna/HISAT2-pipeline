@@ -7,4 +7,5 @@ authors:
 title: "HISAT2-pipeline"
 version: 1.0.0
 date-released: 2022-03-29
+doi: 10.5281/zenodo.6416258
 url: "https://github.com/mcamagna/HISAT2-pipeline"
