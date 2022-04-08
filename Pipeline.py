@@ -606,6 +606,13 @@ if "n" in samples_correct.lower():
 
 
 print()
+gff_file = getGFFFile(folder+"genome")
+if gff_file is None:
+	print("Could not find the GFF file for the genome. Are you sure it's in the genome folder?")
+	print("Quitting..")
+	quit()
+
+
 genome = lookForGenome(folder+"genome")
 if genome is not None:
 	if not genomeIsAlreadyIndexed(folder+"genome"):
@@ -643,12 +650,6 @@ print()
 
 
 print("Estimating expression abundance with stringtie")
-gff_file = getGFFFile(folder+"genome")
-if gff_file is None:
-	print("Could not find the GFF file for the genome. Are you sure it's in the genome folder?")
-	print("Quitting..")
-	quit()
-
 runStringtie(gff_file, mapping_folder=folder+"mapping", outfolder=folder+"abundance")	
 print()
 
