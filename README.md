@@ -32,9 +32,9 @@ In order to run the script, you should prepare your data in the following way:
 
 any_folder/
 
-* ../Pipeline.py
-* ../reads
-* ../genome
+* ./Pipeline.py
+* ./reads
+* ./genome
 
 Copy the Pipeline.py into a folder of your choice. Inside this folder, make two new folders “reads” and “genome”. Copy your read data (*.fastq |*.fq | *.fastq.gz |* .fq.gz) into the reads folder. Copy the genome fasta file into the genome folder, as well as the gff/gtf file, which contains the gene locations for that genome.
 
@@ -48,7 +48,7 @@ The program will first check whether all required software is installed and noti
 
 If it cannot find a genome index in the genome folder, it will create one, otherwise it will skip building an index.
 
-Once mapping is complete, you will find a folder called “mapping” containing the mapped \*.sam files, as well as a “**mapping_summary.tsv**” containing the merged mapping summary for all files. If pandas and openpyxl were installed, you’ll also find an Excel file.
+Once mapping is complete, you will find a folder called “mapping” containing the mapped \*.bam files, as well as a “**mapping_summary.tsv**” containing the merged mapping summary for all files. If pandas and openpyxl were installed, you’ll also find an Excel file.
 
 Once stringtie has finished, you’ll find the gene expression values in the folder “abundance”, as well as a file called “**merged_FPKM.tsv**” (and potentially an Excel file)
 
