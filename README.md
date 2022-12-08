@@ -60,4 +60,4 @@ Run python Pipeline.py -h to see additional commands
 ## 4. Citing
 
 If you use this software for your scientific research, please cite it.
-Refer to the **about** section for informations on how to cite this software.
+Refer to the **about** section for informations on how to cite this software or see the **CITATION.cff** file.
