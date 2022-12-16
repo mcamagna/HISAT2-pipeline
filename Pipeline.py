@@ -400,32 +400,42 @@ def mergeAbundances(abundance_folder):
 	except:
 		print("Warning: Pandas is not installed. Cannot combine the FPKM's into a single file.")
 
-	dataframe = None
-
+	merged_FPKM= None
+	merged_TPM= None
+	
+	#merge FPKM expression
 	for subfolder in os.listdir(abundance_folder):
 		if not os.path.isdir(abundance_folder+'/'+subfolder):
 			continue
 
-		df = pd.read_table(abundance_folder+subfolder+"/"+subfolder+"_gene_expression.tsv", index_col=0)
-		df = df.drop(["TPM", "Coverage"], axis=1)
-
-		if dataframe is None:
-			dataframe = df
+		df = pd.read_table(abundance_folder+subfolder+"/"+subfolder+"_gene_expression.tsv",)
+		#occasionally, stringtie has trouble identifying the gene ID or gene Name from the GFF files. Lets create an
+		#unmistakable ID
+		df["temp_id"] = df["Gene ID"] + df["Gene Name"] + df['Reference'] + df["Start"].astype('str') + df['End'].astype('str')
+		df.set_index("temp_id", inplace=True)
+		
+		if merged_FPKM is None:
+			merged_FPKM = df.drop(["TPM", "Coverage"], axis=1)
+			merged_TPM = df.drop(["FPKM", "Coverage"], axis=1)
 		else:
-			dataframe = dataframe.join(df[["FPKM"]], how='outer')
-
-		#lets rename the FPKM into the sample name
-		renamed_columns = list(dataframe.columns)[0:-1]
-		renamed_columns.append(subfolder)
-		dataframe.columns = renamed_columns
-	
-	dataframe.to_csv(abundance_folder+"merged_FPKM.tsv", sep="\t")
+			merged_TPM  = merged_TPM.join(df[["TPM"]], how='outer')
+			merged_FPKM = merged_FPKM.join(df[["FPKM"]], how='outer')
+		
+		merged_TPM.rename(columns={"TPM":subfolder}, inplace=True)
+		merged_FPKM.rename(columns={"FPKM":subfolder}, inplace=True)
+			
+	merged_TPM= merged_TPM.reset_index().drop("temp_id", axis=1).set_index("Gene ID")
+	merged_FPKM = merged_FPKM.reset_index().drop("temp_id", axis=1).set_index("Gene ID")
+		
+	merged_FPKM.to_csv(abundance_folder+"merged_FPKM.tsv", sep="\t")
+	merged_TPM.to_csv(abundance_folder+"merged_TPM.tsv", sep="\t")
 	try:
-		dataframe.to_excel(abundance_folder+"merged_FPKM.xlsx")
+		merged_FPKM.to_excel(abundance_folder+"merged_FPKM.xlsx")
+		merged_TPM.to_excel(abundance_folder+"merged_TPM.xlsx")
 	except:
 		pass
 	
-	return dataframe
+	return merged_FPKM, merged_TPM
 
 
 
@@ -654,6 +664,8 @@ runStringtie(gff_file, mapping_folder=folder+"mapping", outfolder=folder+"abunda
 print()
 
 mergeAbundances(folder+"abundance")
+
+
 	
 	
 	
