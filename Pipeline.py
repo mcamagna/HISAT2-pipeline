@@ -53,9 +53,9 @@ class PairedReadSample(Sample):
 		
 	def addRead(self, read):
 		self.reads.append(read)
-		if "R1" in read or "READ1" in read.upper():
+		if "_R1" in read or "READ1" in read.upper():
 			self.left_reads.append(read)
-		elif "R2" in read or "READ2" in read.upper():
+		elif "_R2" in read or "READ2" in read.upper():
 			self.right_reads.append(read)
 		else:
 			print("Warning: Paired read did not contain R1 or R2")
@@ -515,9 +515,9 @@ def arePairedReads(folder="."):
 	for file in os.listdir(folder):
 	
 		if isFastqFile(file):
-			if "R1" in file or "Read1" in file or "read1" in file:
+			if "_R1" in file or "Read1" in file or "read1" in file:
 				foundLeftRead = True
-			elif "R2" in file or "Read2" in file or "read2" in file:
+			elif "_R2" in file or "Read2" in file or "read2" in file:
 				foundRightRead = True
 
 		if foundLeftRead and foundRightRead:
