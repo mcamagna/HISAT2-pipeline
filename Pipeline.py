@@ -1,7 +1,4 @@
-import os
-import gzip
-import re
-import argparse
+import os, glob, gzip, re, argparse
 
 class Sample:
 
@@ -400,29 +397,47 @@ def mergeAbundances(abundance_folder):
 	except:
 		print("Warning: Pandas is not installed. Cannot combine the FPKM's into a single file.")
 
+	merged_gene_info = None
 	merged_FPKM= None
 	merged_TPM= None
 	
-	#merge FPKM expression
-	for subfolder in os.listdir(abundance_folder):
-		if not os.path.isdir(abundance_folder+'/'+subfolder):
-			continue
-
-		df = pd.read_table(abundance_folder+subfolder+"/"+subfolder+"_gene_expression.tsv",)
+	#stringtie result files omit entries that have no expression. Let's first parse all abundance files,
+	#and gather all gene names / gene information	
+	for abundance_file in glob.glob(f"{abundance_folder}/*/*_gene_expression.tsv"):
+		
+		sample_name = abundance_file.split("/")[-2]
+		df = pd.read_table(abundance_file)
+		df = df[df.columns[0:6]] #keep only the gene info part
 		#occasionally, stringtie has trouble identifying the gene ID or gene Name from the GFF files. Lets create an
-		#unmistakable ID
+		#unmistakable ID. Note: If missing, the Gene Name is sometimes assinged a dot, sometimes a dash. 
+		#I could not find any stringtie documentation explaining why that is
+		df['Gene Name'] = [str(n) if n!='.' and n!= '-' else "." for n in df['Gene Name']]
+		df['Gene ID'] = [str(n) if n!='.' and n!= '-' else "." for n in df['Gene ID']]
 		df["temp_id"] = df["Gene ID"] + df["Gene Name"] + df['Reference'] + df["Start"].astype('str') + df['End'].astype('str')
 		df.set_index("temp_id", inplace=True)
 		
-		if merged_FPKM is None:
-			merged_FPKM = df.drop(["TPM", "Coverage"], axis=1)
-			merged_TPM = df.drop(["FPKM", "Coverage"], axis=1)
+		if merged_gene_info is None:
+			merged_gene_info = df
 		else:
-			merged_TPM  = merged_TPM.join(df[["TPM"]], how='outer')
-			merged_FPKM = merged_FPKM.join(df[["FPKM"]], how='outer')
+			df = df[df.index.isin(merged_gene_info.index)==False]
+			merged_gene_info = pd.concat([merged_gene_info, df])
+        	
+	merged_FPKM = merged_gene_info
+	merged_TPM = merged_gene_info
+	
+	for abundance_file in glob.glob(f"{abundance_folder}/*/*_gene_expression.tsv"):
+		sample_name = abundance_file.split("/")[-2]
+		df = pd.read_table(abundance_file)
+		df['Gene Name'] = [str(n) if n!='.' and n != '-' else "." for n in df['Gene Name']]
+		df['Gene ID'] = [str(n) if n!='.' and n != '-' else "." for n in df['Gene ID']]
+		df["temp_id"] = df["Gene ID"] + df["Gene Name"] + df['Reference'] + df["Start"].astype('str') + df['End'].astype('str')
+		df.set_index("temp_id", inplace=True)
 		
-		merged_TPM.rename(columns={"TPM":subfolder}, inplace=True)
-		merged_FPKM.rename(columns={"FPKM":subfolder}, inplace=True)
+		merged_TPM  = merged_TPM.join(df[["TPM"]], how='outer')
+		merged_FPKM = merged_FPKM.join(df[["FPKM"]], how='outer')
+	
+		merged_TPM.rename(columns={"TPM":sample_name}, inplace=True)
+		merged_FPKM.rename(columns={"FPKM":sample_name}, inplace=True)
 			
 	merged_TPM= merged_TPM.reset_index().drop("temp_id", axis=1).set_index("Gene ID")
 	merged_FPKM = merged_FPKM.reset_index().drop("temp_id", axis=1).set_index("Gene ID")
