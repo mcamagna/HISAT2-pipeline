@@ -413,7 +413,7 @@ def mergeAbundances(abundance_folder):
 		#I could not find any stringtie documentation explaining why that is
 		df['Gene Name'] = [str(n) if n!='.' and n!= '-' else "." for n in df['Gene Name']]
 		df['Gene ID'] = [str(n) if n!='.' and n!= '-' else "." for n in df['Gene ID']]
-		df["temp_id"] = df["Gene ID"] + df["Gene Name"] + df['Reference'] + df["Start"].astype('str') + df['End'].astype('str')
+		df["temp_id"] = df["Gene ID"].astype('str') + df["Gene Name"].astype('str') + df['Reference'].astype('str') + df["Start"].astype('str') + df['End'].astype('str')
 		df.set_index("temp_id", inplace=True)
 		
 		if merged_gene_info is None:
@@ -430,7 +430,7 @@ def mergeAbundances(abundance_folder):
 		df = pd.read_table(abundance_file)
 		df['Gene Name'] = [str(n) if n!='.' and n != '-' else "." for n in df['Gene Name']]
 		df['Gene ID'] = [str(n) if n!='.' and n != '-' else "." for n in df['Gene ID']]
-		df["temp_id"] = df["Gene ID"] + df["Gene Name"] + df['Reference'] + df["Start"].astype('str') + df['End'].astype('str')
+		df["temp_id"] = df["Gene ID"].astype('str') + df["Gene Name"].astype('str') + df['Reference'].astype('str') + df["Start"].astype('str') + df['End'].astype('str')
 		df.set_index("temp_id", inplace=True)
 		
 		merged_TPM  = merged_TPM.join(df[["TPM"]], how='outer')
