@@ -155,16 +155,9 @@ def mapToGenome(samples, genome, mappingFolder):
 	mappingFolder = assureFolderEndsWithSlash(mappingFolder)
 	
 	for sample in samples:
-		cmd = "hisat2 -x " + str(genome_basename)
-		cmd += " "
-		cmd += "--threads "+threads + " "
-		cmd += sample.getHisatString()
-		cmd += " -S " + mappingFolder + sample.getName()
-		cmd += ".sam"
-		
-		cmd += " --new-summary"
-		cmd += " --summary-file "
-		cmd += mappingFolder + sample.getName()+"_summary.txt"
+		cmd = f"hisat2 -x {str(genome_basename)} --threads {threads} {sample.getHisatString()}"
+		cmd+= f" -S {mappingFolder + sample.getName()}.sam"
+		cmd+= f" --new-summary --summary-file {mappingFolder + sample.getName()}_summary.txt"
 		
 		print(cmd)
 		os.system(cmd)
@@ -195,12 +188,9 @@ def runStringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
 			continue
 		name = file.split(".bam")[0].split(".sam")[0]
 		
-		cmd = "stringtie -e -B "
-		cmd += "-p "+ threads + " "
-		cmd+= mapping_folder+file
-		cmd+= " -G "+gff_file
-		cmd+= " -A "+outfolder + name+"/"+name + "_gene_expression.tsv"
-		cmd+= " -o "+outfolder+name+"/"+name+".gtf"
+		cmd = f"stringtie -e -B -p {threads} {mapping_folder+file} -G {gff_file}"
+		cmd+= f"-A {outfolder + name}/{name}_gene_expression.tsv"
+		cmd+= f" -o {outfolder+name}/{name}.gtf"
 		
 		print(cmd)
 		os.system(cmd)
@@ -521,7 +511,7 @@ def isFastqFile(file):
 	else:
 		return False
 		
-		
+
 		
 def arePairedReads(folder="."):
 	foundLeftRead = False
@@ -576,7 +566,7 @@ def checkIfAllPrerequisitesInstalled():
 		
 
 
-print("HISAT2-pipline - Version 1.0.2 (2023/07) ")
+print("HISAT2-pipline - Version 1.0.3 (2023/11) ")
 print("")
 
 
@@ -585,20 +575,28 @@ checkIfAllPrerequisitesInstalled()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--skip_mapping", help="Skip mapping to genome", action="store_true")
-parser.add_argument("--folder", help="Use this folder to look for the reads and genome folder", default=".")
+parser.add_argument("--reads_folder", help="The folder where the reads are located", default="./reads")
+parser.add_argument("--genome_folder", help="The folder where the genome is located", default="./genome")
+parser.add_argument("--threads", help="The number of threads used", default=f"{os.cpu_count()}")
 
 args = parser.parse_args()
 
-folder = args.folder
-folder = assureFolderEndsWithSlash(folder)
+reads_folder = args.reads_folder
+reads_folder = assureFolderEndsWithSlash(reads_folder)
 
-threads = str(os.cpu_count())
+genome_folder = args.genome_folder
+genome_folder = assureFolderEndsWithSlash(genome_folder)
+
+threads = str(args.threads)
 
 
+all_read_files = [f for f in glob.glob(f"{reads_folder}/*") if isFastqFile(f)]
+if len(all_read_files)==0:
+	print(f"Found no reads in reads folder ({reads_folder})")
+	print("Quitting...")
+	quit()
 
-
-
-PAIRED = arePairedReads(folder+"reads")
+PAIRED = arePairedReads(reads_folder)
 if PAIRED:
 	paired_correct_answer = input("I found PAIRED reads in the folder. Is this correct? (yes/no) ")
 	if "N" in paired_correct_answer.upper():
@@ -617,7 +615,7 @@ else:
 
 print()
 
-samples = prepareReads(folder+"reads", PAIRED) 
+samples = prepareReads(reads_folder, PAIRED) 
 print("Found the following samples:")
 for sample in samples:
 	print(sample)
@@ -631,16 +629,16 @@ if "n" in samples_correct.lower():
 
 
 print()
-gff_file = getGFFFile(folder+"genome")
+gff_file = getGFFFile(genome_folder)
 if gff_file is None:
 	print("Could not find the GFF file for the genome. Are you sure it's in the genome folder?")
 	print("Quitting..")
 	quit()
 
 
-genome = lookForGenome(folder+"genome")
+genome = lookForGenome(genome_folder)
 if genome is not None:
-	if not genomeIsAlreadyIndexed(folder+"genome"):
+	if not genomeIsAlreadyIndexed(genome_folder):
 		print("Building the genome index.")
 		print()
 		
