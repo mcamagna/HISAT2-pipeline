@@ -189,7 +189,7 @@ def runStringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
 		name = file.split(".bam")[0].split(".sam")[0]
 		
 		cmd = f"stringtie -e -B -p {threads} {mapping_folder+file} -G {gff_file}"
-		cmd+= f"-A {outfolder + name}/{name}_gene_expression.tsv"
+		cmd+= f" -A {outfolder + name}/{name}_gene_expression.tsv"
 		cmd+= f" -o {outfolder+name}/{name}.gtf"
 		
 		print(cmd)
@@ -455,10 +455,7 @@ def convertToBAM(folder):
 			continue
 		
 		name = file.split(".sam")[0]
-		
-		cmd = "samtools sort -@ "+ str(threads)
-		cmd += " -o "+folder+name+".bam " 
-		cmd += folder+file
+		cmd = f"samtools sort -@ {threads} -o {folder+name}.bam {folder+file}"
 		
 		print(cmd)
 		returnCode = os.system(cmd)
@@ -477,7 +474,6 @@ def prepareReads(folder=".", arePaired=False):
 	
 	for r in reads:
 		basename = getBasenameOfRead(r)
-		#print(basename)
 		entry = sample_dict.get(basename)
 		
 		if entry is None:
@@ -487,7 +483,6 @@ def prepareReads(folder=".", arePaired=False):
 		
 		sample_dict[basename] = entry
 	
-	#print(sample_dict)
 	
 	samples = []
 	for basename, reads in sample_dict.items():
@@ -575,11 +570,14 @@ checkIfAllPrerequisitesInstalled()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--skip_mapping", help="Skip mapping to genome", action="store_true")
+parser.add_argument("--outfolder", help="The folder where the results will be written to", default="./")
 parser.add_argument("--reads_folder", help="The folder where the reads are located", default="./reads")
 parser.add_argument("--genome_folder", help="The folder where the genome is located", default="./genome")
 parser.add_argument("--threads", help="The number of threads used", default=f"{os.cpu_count()}")
 
 args = parser.parse_args()
+
+folder = args.outfolder
 
 reads_folder = args.reads_folder
 reads_folder = assureFolderEndsWithSlash(reads_folder)
@@ -638,17 +636,18 @@ if gff_file is None:
 
 genome = lookForGenome(genome_folder)
 if genome is not None:
-	if not genomeIsAlreadyIndexed(genome_folder):
-		print("Building the genome index.")
-		print()
-		
-		buildIndex(genome)
-	else:
-		reindex = input("I found a genome index in the genome folder. Do you want to skip building the index? (yes/no) ")
-		if "n" in reindex.lower():
+	if not args.skip_mapping:
+		if not genomeIsAlreadyIndexed(genome_folder):
 			print("Building the genome index.")
 			print()
+			
 			buildIndex(genome)
+		else:
+			reindex = input("I found a genome index in the genome folder. Do you want to skip building the index? (yes/no) ")
+			if "n" in reindex.lower():
+				print("Building the genome index.")
+				print()
+				buildIndex(genome)
 
 else:
 	print("Could not find a genome file in the genomes folder. Exiting")
@@ -656,8 +655,7 @@ else:
 	
 	
 print()
-if not os.path.exists(folder+"mapping"):
-	os.mkdir(folder+"mapping")
+os.makedirs(folder+"mapping", exist_ok=True)
 
 if not args.skip_mapping:
 	mapToGenome(samples, genome, folder+"mapping")
