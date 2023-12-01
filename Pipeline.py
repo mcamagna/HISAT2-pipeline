@@ -561,7 +561,7 @@ def checkIfAllPrerequisitesInstalled():
 		
 
 
-print("HISAT2-pipline - Version 1.0.3 (2023/11) ")
+print("HISAT2-pipline - Version 1.0.4 (2023/11) ")
 print("")
 
 
