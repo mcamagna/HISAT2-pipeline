@@ -568,15 +568,15 @@ print("HISAT2-pipline - Version 1.0.4 (2023/11) ")
 print("")
 
 
-checkIfAllPrerequisitesInstalled()
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--reads_folder", help="The folder where the reads are located (default= ./reads)", default="./reads")
+parser.add_argument("--genome_folder", help="The folder where the genome fasta and gff file is located (default= ./genome)", default="./genome")
+parser.add_argument("--outfolder", help="The folder where the results will be written to (default=./)", default="./")
 parser.add_argument("--skip_mapping", help="Skip mapping to genome", action="store_true")
-parser.add_argument("--outfolder", help="The folder where the results will be written to", default="./")
-parser.add_argument("--reads_folder", help="The folder where the reads are located", default="./reads")
-parser.add_argument("--genome_folder", help="The folder where the genome is located", default="./genome")
-parser.add_argument("--threads", help="The number of threads used", default=f"{os.cpu_count()}")
+parser.add_argument("--threads", help=f"The number of threads used (default={os.cpu_count()})", default=f"{os.cpu_count()}")
+parser.add_argument("--yes", help="Answer all questions with 'yes'", action='store_true')
 
 args = parser.parse_args()
 
@@ -590,6 +590,7 @@ genome_folder = assureFolderEndsWithSlash(genome_folder)
 
 threads = str(args.threads)
 
+checkIfAllPrerequisitesInstalled()
 
 all_read_files = [f for f in glob.glob(f"{reads_folder}/*") if isFastqFile(f)]
 if len(all_read_files)==0:
@@ -599,11 +600,13 @@ if len(all_read_files)==0:
 
 PAIRED = arePairedReads(reads_folder)
 if PAIRED:
-	paired_correct_answer = input("I found PAIRED reads in the folder. Is this correct? (yes/no) ")
+	print("I found PAIRED reads in the folder. ")
+	paired_correct_answer = "yes" if args.yes else input("Is this correct? (yes/no) ")
 	if "N" in paired_correct_answer.upper():
 		PAIRED = not PAIRED
 else:
-	paired_correct_answer = input("I found UNPAIRED reads in the folder. Is this correct? (yes/no) ")
+	print("I found UNPAIRED reads in the folder. ")
+	paired_correct_answer = "yes" if args.yes else input("Is this correct? (yes/no) ")
 	if "N" in paired_correct_answer.upper():
 		print("Please rename the file so that they contain _R1 and _R2 respectively (or _Read1 and _Read2). Otherwise I won't able to distinguish them.")
 		print("Exiting")
@@ -623,7 +626,7 @@ for sample in samples:
 
 print()
 
-samples_correct = input("Is this correct? (yes/no) ")
+samples_correct = "yes" if args.yes else input("Is this correct? (yes/no) ")
 if "n" in samples_correct.lower():
 		print("Exiting")
 		quit()	
@@ -646,7 +649,8 @@ if genome is not None:
 			
 			buildIndex(genome)
 		else:
-			reindex = input("I found a genome index in the genome folder. Do you want to skip building the index? (yes/no) ")
+			print("I found a genome index in the genome folder. ")
+			reindex =  "yes" if args.yes else input("Do you want to skip building the index? (yes/no) ")
 			if "n" in reindex.lower():
 				print("Building the genome index.")
 				print()
