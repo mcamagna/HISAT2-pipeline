@@ -324,7 +324,10 @@ def summarizePairedMapping(folder="./mapping"):
 	
 	df = pd.DataFrame(data)
 	df.set_index("Sample", inplace=True)
-	df.to_csv(folder+"mapping_summary.tsv",sep="\t")
+	try:
+		df.to_csv(folder+"mapping_summary.tsv",sep="\t", lineterminator='\n') #lineterminator was specifed due to a bug under MacOS
+	except:
+		df.to_csv(folder+"mapping_summary.tsv",sep="\t", line_terminator='\n') #for older versions of pandas
 	try:
 		df.to_excel(folder+"mapping_summary.xlsx")
 	except:
