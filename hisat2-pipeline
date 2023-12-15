@@ -1,3 +1,4 @@
+#! python
 import os, glob, gzip, re, argparse
 
 class Sample:
@@ -259,14 +260,14 @@ def readAllMappingSummaries(folder="./mapping"):
 def extractNumberFromSummary(some_text_before_colon, text, extractPercentage=False):
 	text = text[text.find(some_text_before_colon) : ]
 	if extractPercentage:
-		hit = re.search("\d+(\.?\d+?%)", text) #extracts all percentages
+		hit = re.search(r"\d+(\.?\d+?%)", text) #extracts all percentages
 		hit = hit[0].replace("%", "")
 		return float(hit)
 	else:
 		text = text.split(some_text_before_colon)[1]
 		text = text.split(" (")[0]
 		text = text.split("\n")[0]
-		hit = re.search("\d+", text) #extracts all numbers
+		hit = re.search(r"\d+", text) #extracts all numbers
 		text = int(hit[0])
 	return text
 	
