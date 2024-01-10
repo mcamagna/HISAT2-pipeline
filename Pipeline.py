@@ -581,6 +581,7 @@ parser.add_argument("--yes", help="Answer all questions with 'yes'", action='sto
 args = parser.parse_args()
 
 folder = args.outfolder
+folder = assureFolderEndsWithSlash(folder)
 
 reads_folder = args.reads_folder
 reads_folder = assureFolderEndsWithSlash(reads_folder)
