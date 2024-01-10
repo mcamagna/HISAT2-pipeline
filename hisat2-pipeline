@@ -1,6 +1,6 @@
 #! python
 import os, glob, gzip, re, argparse
-version_string = "HISAT2-pipline v1.0.6 (2023/12) "
+version_string = "HISAT2-pipline v1.0.7 (2024/1) "
 
 class Sample:
 
