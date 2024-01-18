@@ -1,4 +1,6 @@
+#! python
 import os, glob, gzip, re, argparse
+version_string = "HISAT2-pipline v1.0.7 (2024/1) "
 
 class Sample:
 
@@ -259,14 +261,14 @@ def readAllMappingSummaries(folder="./mapping"):
 def extractNumberFromSummary(some_text_before_colon, text, extractPercentage=False):
 	text = text[text.find(some_text_before_colon) : ]
 	if extractPercentage:
-		hit = re.search("\d+(\.?\d+?%)", text) #extracts all percentages
+		hit = re.search(r"\d+(\.?\d+?%)", text) #extracts all percentages
 		hit = hit[0].replace("%", "")
 		return float(hit)
 	else:
 		text = text.split(some_text_before_colon)[1]
 		text = text.split(" (")[0]
 		text = text.split("\n")[0]
-		hit = re.search("\d+", text) #extracts all numbers
+		hit = re.search(r"\d+", text) #extracts all numbers
 		text = int(hit[0])
 	return text
 	
@@ -557,17 +559,10 @@ def checkIfAllPrerequisitesInstalled():
 		print("Make sure it is installed, and that you're")
 		print("running this script in the same environment.")
 		print("Quitting...")
-		quit()
+		exit(130)
 	else:
 		print("... no problems found.")
 		print("")
-		
-
-
-print("HISAT2-pipline - Version 1.0.7 (2024/1) ")
-print("")
-
-
 
 
 parser = argparse.ArgumentParser()
@@ -577,8 +572,16 @@ parser.add_argument("--outfolder", help="The folder where the results will be wr
 parser.add_argument("--skip_mapping", help="Skip mapping to genome", action="store_true")
 parser.add_argument("--threads", help=f"The number of threads used (default={os.cpu_count()})", default=f"{os.cpu_count()}")
 parser.add_argument("--yes", help="Answer all questions with 'yes'", action='store_true')
+parser.add_argument("--version", help="Prints the current version'", action='store_true')
 
 args = parser.parse_args()
+
+		
+print(version_string)
+print("")
+
+if args.version:
+	exit(0) #exit immediately after printing the version
 
 folder = args.outfolder
 folder = assureFolderEndsWithSlash(folder)
@@ -597,7 +600,7 @@ all_read_files = [f for f in glob.glob(f"{reads_folder}/*") if isFastqFile(f)]
 if len(all_read_files)==0:
 	print(f"Found no reads in reads folder ({reads_folder})")
 	print("Quitting...")
-	quit()
+	exit(130)
 
 PAIRED = arePairedReads(reads_folder)
 if PAIRED:
@@ -611,7 +614,7 @@ else:
 	if "N" in paired_correct_answer.upper():
 		print("Please rename the file so that they contain _R1 and _R2 respectively (or _Read1 and _Read2). Otherwise I won't able to distinguish them.")
 		print("Exiting")
-		quit()	
+		exit(0)	
 	
 if PAIRED:
 	print("Running pipeline with PAIRED reads")
@@ -630,7 +633,7 @@ print()
 samples_correct = "yes" if args.yes else input("Is this correct? (yes/no) ")
 if "n" in samples_correct.lower():
 		print("Exiting")
-		quit()	
+		exit(130)	
 
 
 print()
@@ -638,7 +641,7 @@ gff_file = getGFFFile(genome_folder)
 if gff_file is None:
 	print("Could not find the GFF file for the genome. Are you sure it's in the genome folder?")
 	print("Quitting..")
-	quit()
+	exit(130)
 
 
 genome = lookForGenome(genome_folder)
@@ -659,7 +662,7 @@ if genome is not None:
 
 else:
 	print("Could not find a genome file in the genomes folder. Exiting")
-	quit()
+	exit(130)
 	
 	
 print()
