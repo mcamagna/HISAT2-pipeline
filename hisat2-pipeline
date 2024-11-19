@@ -135,7 +135,7 @@ def look_for_genome(folder="genome"):
 
 def build_index(genome):
 	basename = genome.rsplit(".f",1)[0]
-	cmd = f"hisat2-build {genome} {basename}"
+	cmd = f"hisat2-build --quiet {genome} {basename}"
 	print(cmd)
 	os.system(cmd)
 	
@@ -651,16 +651,16 @@ genome = look_for_genome(genome_folder)
 if genome is not None:
 	if not args.skip_mapping:
 		if not genome_is_already_indexed(genome_folder):
-			print("Building the genome index.")
 			print()
+			print("Building the genome index:")
 			
 			build_index(genome)
 		else:
 			print("I found a genome index in the genome folder. ")
 			reindex =  "yes" if args.yes else input("Do you want to skip building the index? (yes/no) ")
 			if "n" in reindex.lower():
-				print("Building the genome index.")
 				print()
+				print("Building the genome index.")
 				build_index(genome)
 
 else:
@@ -669,6 +669,8 @@ else:
 	
 	
 print()
+print("Mapping reads using HISAT2")
+
 os.makedirs(folder+"mapping", exist_ok=True)
 
 if not args.skip_mapping:
