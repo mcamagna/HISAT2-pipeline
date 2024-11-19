@@ -19,7 +19,7 @@ class Sample:
 		return self.name
 	
 	def __str__(self):
-		return self.name + " (" +str(len(self.reads)) + " files - "+ self.type +")"
+		return f"{self.name} ({len(self.reads)} files - {self.type})"
 	
 
 
@@ -31,25 +31,14 @@ class PairedReadSample(Sample):
 		self.right_reads = []
 		self.type = "paired"
 		
-		
+
 	def get_hisat_string(self):
-		hs = "-1 "
-		for i in range(len(self.left_reads)):
-			read = self.left_reads[i]
-			hs += str(read)
-			if i < len(self.left_reads)-1:
-				hs += ","	
-		
-		hs += " -2 "
-		for i in range(len(self.right_reads)):
-			read = self.right_reads[i]
-			hs += str(read)
-			if i < len(self.right_reads)-1:
-				hs += ","	
+		L = ','.join(self.left_reads)
+		R = ','.join(self.right_reads)
+		hs = f"-1 {L} -2 {R}"
 		return hs
 	
-	
-		
+
 	def add_read(self, read):
 		self.reads.append(read)
 		if "_R1" in read or "READ1" in read.upper():
@@ -67,18 +56,9 @@ class UnpairedReadSample(Sample):
 		super().__init__(name)
 		self.type = "unpaired"
 			
-			
 		
 	def get_hisat_string(self):
-		hs = "-U "
-		for i in range(len(self.reads)):
-			read = self.reads[i]
-			hs += str(read)
-			if i < len(self.reads)-1:
-				hs += ","	
-		return hs
-	
-	
+		return f"-U {','.join(self.reads)}"
 	
 		
 	def add_read(self, read):
@@ -154,18 +134,14 @@ def look_for_genome(folder="genome"):
 
 
 def build_index(genome):
-	basename = genome.split(".f")[0]
-		
-	cmd = "hisat2-build "
-	cmd += str(genome)
-	cmd += " "
-	cmd += str(basename)
+	basename = genome.rsplit(".f",1)[0]
+	cmd = f"hisat2-build {genome} {basename}"
 	print(cmd)
 	os.system(cmd)
 	
 
 def map_to_genome(samples, genome, mappingFolder):
-	genome_basename = genome.split(".f")[0]
+	genome_basename = genome.rsplit(".f",1)[0]
 	
 	mappingFolder = assure_folder_ends_with_slash(mappingFolder)
 	
@@ -179,7 +155,7 @@ def map_to_genome(samples, genome, mappingFolder):
 		#immediately convert the SAM to BAM
 		convert_to_BAM(mappingFolder)
 
-
+#TODO: implement support for compressed files
 def get_GFF_file(folder="folder"):
 	for file in os.listdir(folder):
 		if file.lower().endswith("gff") or file.lower().endswith("gtf") or file.lower().endswith("gff3"):
@@ -429,7 +405,7 @@ def merge_abundances(abundance_folder):
 		else:
 			df = df[df.index.isin(merged_gene_info.index)==False]
 			merged_gene_info = pd.concat([merged_gene_info, df])
-        	
+			
 	merged_FPKM = merged_gene_info
 	merged_TPM = merged_gene_info
 	
@@ -517,7 +493,8 @@ def prepare_reads(folder=".", arePaired=False):
 	
 	return samples
 	
-	
+
+#TODO: Hisat2 supports .bz2 compressed files, so they should be supported as well
 def is_fastq_file(file):
 	if file.upper().endswith("FQ") or file.upper().endswith("FASTQ") or file.upper().endswith("FQ.GZ") or file.upper().endswith("FASTQ.GZ") :
 		return True
