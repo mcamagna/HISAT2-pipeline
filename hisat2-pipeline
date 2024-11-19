@@ -9,13 +9,13 @@ class Sample:
 		self.name = name
 		self.type = ""
 				
-	def getHisatString(self):
+	def get_hisat_string(self):
 		pass
 			
-	def addRead(self, read):
+	def add_read(self, read):
 		pass
 		
-	def getName(self):
+	def get_name(self):
 		return self.name
 	
 	def __str__(self):
@@ -32,7 +32,7 @@ class PairedReadSample(Sample):
 		self.type = "paired"
 		
 		
-	def getHisatString(self):
+	def get_hisat_string(self):
 		hs = "-1 "
 		for i in range(len(self.left_reads)):
 			read = self.left_reads[i]
@@ -50,7 +50,7 @@ class PairedReadSample(Sample):
 	
 	
 		
-	def addRead(self, read):
+	def add_read(self, read):
 		self.reads.append(read)
 		if "_R1" in read or "READ1" in read.upper():
 			self.left_reads.append(read)
@@ -69,7 +69,7 @@ class UnpairedReadSample(Sample):
 			
 			
 		
-	def getHisatString(self):
+	def get_hisat_string(self):
 		hs = "-U "
 		for i in range(len(self.reads)):
 			read = self.reads[i]
@@ -81,7 +81,7 @@ class UnpairedReadSample(Sample):
 	
 	
 		
-	def addRead(self, read):
+	def add_read(self, read):
 		self.reads.append(read)
 		
 
@@ -111,7 +111,7 @@ def extract_compressed(file):
 		filehandle.close()
 
 
-def canRun(exe):
+def can_run(exe):
 	'''Runs "which" followed by the command and returns True if the returncode equals 0'''
 	import subprocess
 	try:
@@ -123,26 +123,17 @@ def canRun(exe):
 
 
 
-def assureFolderEndsWithSlash(folder):
+def assure_folder_ends_with_slash(folder):
 	if not folder.endswith("/") and not folder.endswith("\\"):
 		folder+="/"
 	return folder
 	
 
-import os
-import re
-
-def assureFolderEndsWithSlash(folder):
-	if not folder.endswith("/") and not folder.endswith("\\"):
-		folder+="/"
-	return folder
-
-
 def look_for_genome(folder="genome"):
 	"""Looks for any fasta file in the folder. If a fasta file cannot be found, the function will look
 	for compressed fasta files, and extract them, returning the uncompressed filepath
 	"""
-	folder = assureFolderEndsWithSlash(folder)
+	folder = assure_folder_ends_with_slash(folder)
 	fasta_pattern = re.compile(r'(fa|fna|fasta|fas)$')
 	
 	for file in os.listdir(folder):
@@ -162,7 +153,7 @@ def look_for_genome(folder="genome"):
 
 
 
-def buildIndex(genome):
+def build_index(genome):
 	basename = genome.split(".f")[0]
 		
 	cmd = "hisat2-build "
@@ -173,38 +164,38 @@ def buildIndex(genome):
 	os.system(cmd)
 	
 
-def mapToGenome(samples, genome, mappingFolder):
+def map_to_genome(samples, genome, mappingFolder):
 	genome_basename = genome.split(".f")[0]
 	
-	mappingFolder = assureFolderEndsWithSlash(mappingFolder)
+	mappingFolder = assure_folder_ends_with_slash(mappingFolder)
 	
 	for sample in samples:
-		cmd = f"hisat2 -x {str(genome_basename)} --threads {threads} {sample.getHisatString()}"
-		cmd+= f" -S {mappingFolder + sample.getName()}.sam"
-		cmd+= f" --new-summary --summary-file {mappingFolder + sample.getName()}_summary.txt"
+		cmd = f"hisat2 -x {str(genome_basename)} --threads {threads} {sample.get_hisat_string()}"
+		cmd+= f" -S {mappingFolder + sample.get_name()}.sam"
+		cmd+= f" --new-summary --summary-file {mappingFolder + sample.get_name()}_summary.txt"
 		
 		print(cmd)
 		os.system(cmd)
 		#immediately convert the SAM to BAM
-		convertToBAM(mappingFolder)
+		convert_to_BAM(mappingFolder)
 
 
-def getGFFFile(folder="folder"):
+def get_GFF_file(folder="folder"):
 	for file in os.listdir(folder):
 		if file.lower().endswith("gff") or file.lower().endswith("gtf") or file.lower().endswith("gff3"):
-			folder = assureFolderEndsWithSlash(folder)
+			folder = assure_folder_ends_with_slash(folder)
 			return folder+file
 	
 	return None
 
 
 
-def runStringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
+def run_stringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
 	if not os.path.exists(outfolder):
 		os.mkdir(outfolder)
 		
-	mapping_folder = assureFolderEndsWithSlash(mapping_folder)
-	outfolder = assureFolderEndsWithSlash(outfolder)
+	mapping_folder = assure_folder_ends_with_slash(mapping_folder)
+	outfolder = assure_folder_ends_with_slash(outfolder)
 	
 	
 	for file in os.listdir(mapping_folder):
@@ -222,23 +213,23 @@ def runStringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
 
 
 
-def genomeIsAlreadyIndexed(folder="genome"):
+def genome_is_already_indexed(folder="genome"):
 	for file in os.listdir(folder):
 		if file.endswith("ht2"):
 			return True
 	return False
 
 
-def getAllReadsInFolder(folder="reads"):
+def get_all_reads_in_folder(folder="reads"):
 	reads = []
 	for file in os.listdir(folder):
-		if isFastqFile(file):
+		if is_fastq_file(file):
 			reads.append(file)
 	return reads		
 	
 	
 
-def getBasenameOfRead(read):
+def get_basename_of_read(read):
 	basename = read.split(".fa")[0]
 	basename = basename.split(".fq")[0]
 	
@@ -255,10 +246,10 @@ def getBasenameOfRead(read):
 
 
 
-def readAllMappingSummaries(folder="./mapping"):
+def read_all_mapping_summaries(folder="./mapping"):
 	'''Reads all *_summary.txt files in a folder and returns a list
 	 of the sample names, and a list of the text in the summary files.'''
-	folder = assureFolderEndsWithSlash(folder)
+	folder = assure_folder_ends_with_slash(folder)
 	names = []
 	summaries = []
 	
@@ -280,7 +271,7 @@ def readAllMappingSummaries(folder="./mapping"):
 
 
 
-def extractNumberFromSummary(some_text_before_colon, text, extractPercentage=False):
+def extract_number_from_summary(some_text_before_colon, text, extractPercentage=False):
 	text = text[text.find(some_text_before_colon) : ]
 	if extractPercentage:
 		hit = re.search(r"\d+(\.?\d+?%)", text) #extracts all percentages
@@ -296,16 +287,16 @@ def extractNumberFromSummary(some_text_before_colon, text, extractPercentage=Fal
 	
 
 
-def summarizePairedMapping(folder="./mapping"):
+def summarize_paired_mapping(folder="./mapping"):
 	try:
 		import pandas as pd
 	except:
 		print("Warning: Could not create a summary of the mapping. Is pandas installed?")
 		return
 	
-	folder = assureFolderEndsWithSlash(folder)
+	folder = assure_folder_ends_with_slash(folder)
 	
-	names, summaries = readAllMappingSummaries(folder)
+	names, summaries = read_all_mapping_summaries(folder)
 	data = dict()
 	data["Sample"] = []
 	data["Total pairs"] = []
@@ -328,23 +319,23 @@ def summarizePairedMapping(folder="./mapping"):
 
 	for name, summary in zip(names, summaries):
 		data["Sample"].append(name)
-		data["Total pairs"].append(extractNumberFromSummary("Total pairs", summary))
-		data["Aligned concordantly or discordantly 0 time"].append(extractNumberFromSummary("Aligned concordantly or discordantly 0 time", summary))
-		data["Aligned concordantly or discordantly 0 time %"].append(extractNumberFromSummary("Aligned concordantly or discordantly 0 time", summary, True))
-		data["Aligned concordantly 1 time"].append(extractNumberFromSummary("Aligned concordantly 1 time", summary))
-		data["Aligned concordantly 1 time %"].append(extractNumberFromSummary("Aligned concordantly 1 time", summary, True))
-		data["Aligned concordantly >1 times"].append(extractNumberFromSummary("Aligned concordantly >1 times", summary))
-		data["Aligned concordantly >1 times %"].append(extractNumberFromSummary("Aligned concordantly >1 times", summary, True))
-		data["Aligned discordantly 1 time"].append(extractNumberFromSummary("Aligned discordantly 1 time", summary))
-		data["Aligned discordantly 1 time %"].append(extractNumberFromSummary("Aligned discordantly 1 time", summary, True))
-		data["Total unpaired reads"].append(extractNumberFromSummary("Total unpaired reads", summary))
-		data["Aligned 0 time"].append(extractNumberFromSummary("Aligned 0 time", summary))
-		data["Aligned 0 time %"].append(extractNumberFromSummary("Aligned 0 time", summary, True))
-		data["Aligned 1 time"].append(extractNumberFromSummary("Aligned 1 time", summary))
-		data["Aligned 1 time %"].append(extractNumberFromSummary("Aligned 1 time", summary, True))
-		data["Aligned >1 times"].append(extractNumberFromSummary("Aligned >1 times", summary))
-		data["Aligned >1 times %"].append(extractNumberFromSummary("Aligned >1 times", summary, True))
-		data["Overall alignment rate"].append(extractNumberFromSummary("Overall alignment rate", summary, True))
+		data["Total pairs"].append(extract_number_from_summary("Total pairs", summary))
+		data["Aligned concordantly or discordantly 0 time"].append(extract_number_from_summary("Aligned concordantly or discordantly 0 time", summary))
+		data["Aligned concordantly or discordantly 0 time %"].append(extract_number_from_summary("Aligned concordantly or discordantly 0 time", summary, True))
+		data["Aligned concordantly 1 time"].append(extract_number_from_summary("Aligned concordantly 1 time", summary))
+		data["Aligned concordantly 1 time %"].append(extract_number_from_summary("Aligned concordantly 1 time", summary, True))
+		data["Aligned concordantly >1 times"].append(extract_number_from_summary("Aligned concordantly >1 times", summary))
+		data["Aligned concordantly >1 times %"].append(extract_number_from_summary("Aligned concordantly >1 times", summary, True))
+		data["Aligned discordantly 1 time"].append(extract_number_from_summary("Aligned discordantly 1 time", summary))
+		data["Aligned discordantly 1 time %"].append(extract_number_from_summary("Aligned discordantly 1 time", summary, True))
+		data["Total unpaired reads"].append(extract_number_from_summary("Total unpaired reads", summary))
+		data["Aligned 0 time"].append(extract_number_from_summary("Aligned 0 time", summary))
+		data["Aligned 0 time %"].append(extract_number_from_summary("Aligned 0 time", summary, True))
+		data["Aligned 1 time"].append(extract_number_from_summary("Aligned 1 time", summary))
+		data["Aligned 1 time %"].append(extract_number_from_summary("Aligned 1 time", summary, True))
+		data["Aligned >1 times"].append(extract_number_from_summary("Aligned >1 times", summary))
+		data["Aligned >1 times %"].append(extract_number_from_summary("Aligned >1 times", summary, True))
+		data["Overall alignment rate"].append(extract_number_from_summary("Overall alignment rate", summary, True))
 	
 	df = pd.DataFrame(data)
 	df.set_index("Sample", inplace=True)
@@ -360,16 +351,16 @@ def summarizePairedMapping(folder="./mapping"):
 	return
 
 
-def summarizeUnpairedMapping(folder="./mapping"):
+def summarize_unpaired_mapping(folder="./mapping"):
 	try:
 		import pandas as pd
 	except:
 		print("Warning: Could not create a summary of the mapping. Is pandas installed?")
 		return
 	
-	folder = assureFolderEndsWithSlash(folder)
+	folder = assure_folder_ends_with_slash(folder)
 	
-	names, summaries = readAllMappingSummaries(folder)
+	names, summaries = read_all_mapping_summaries(folder)
 	data = dict()
 	data["Sample"] = []
 	data["Total reads"] = []
@@ -384,14 +375,14 @@ def summarizeUnpairedMapping(folder="./mapping"):
 
 	for name, summary in zip(names, summaries):
 		data["Sample"].append(name)
-		data["Total reads"].append(extractNumberFromSummary("Total reads", summary))
-		data["Aligned 0 time"].append(extractNumberFromSummary("Aligned 0 time", summary))
-		data["Aligned 0 time %"].append(extractNumberFromSummary("Aligned 0 time", summary, True))
-		data["Aligned 1 time"].append(extractNumberFromSummary("Aligned 1 time", summary))
-		data["Aligned 1 time %"].append(extractNumberFromSummary("Aligned 1 time", summary, True))
-		data["Aligned >1 times"].append(extractNumberFromSummary("Aligned >1 times", summary))
-		data["Aligned >1 times %"].append(extractNumberFromSummary("Aligned >1 times", summary, True))
-		data["Overall alignment rate"].append(extractNumberFromSummary("Overall alignment rate", summary, True))
+		data["Total reads"].append(extract_number_from_summary("Total reads", summary))
+		data["Aligned 0 time"].append(extract_number_from_summary("Aligned 0 time", summary))
+		data["Aligned 0 time %"].append(extract_number_from_summary("Aligned 0 time", summary, True))
+		data["Aligned 1 time"].append(extract_number_from_summary("Aligned 1 time", summary))
+		data["Aligned 1 time %"].append(extract_number_from_summary("Aligned 1 time", summary, True))
+		data["Aligned >1 times"].append(extract_number_from_summary("Aligned >1 times", summary))
+		data["Aligned >1 times %"].append(extract_number_from_summary("Aligned >1 times", summary, True))
+		data["Overall alignment rate"].append(extract_number_from_summary("Overall alignment rate", summary, True))
 	
 	df = pd.DataFrame(data)
 	df.set_index("Sample", inplace=True)
@@ -406,9 +397,9 @@ def summarizeUnpairedMapping(folder="./mapping"):
 	
 	
 
-def mergeAbundances(abundance_folder):
+def merge_abundances(abundance_folder):
 	
-	abundance_folder = assureFolderEndsWithSlash(abundance_folder)
+	abundance_folder = assure_folder_ends_with_slash(abundance_folder)
 	try:
 		import pandas as pd
 	except:
@@ -473,9 +464,9 @@ def mergeAbundances(abundance_folder):
 
 
 
-def convertToBAM(folder):
+def convert_to_BAM(folder):
 	'''Converts the SAM files generated by hisat2 into BAM files using samtools'''
-	folder = assureFolderEndsWithSlash(folder)
+	folder = assure_folder_ends_with_slash(folder)
 	
 	for file in os.listdir(folder):
 		if not file.lower().endswith("sam"):
@@ -494,13 +485,13 @@ def convertToBAM(folder):
 		
 	
 
-def prepareReads(folder=".", arePaired=False):
-	reads = getAllReadsInFolder(folder)
+def prepare_reads(folder=".", arePaired=False):
+	reads = get_all_reads_in_folder(folder)
 	sample_dict = dict()
-	folder = assureFolderEndsWithSlash(folder)
+	folder = assure_folder_ends_with_slash(folder)
 	
 	for r in reads:
-		basename = getBasenameOfRead(r)
+		basename = get_basename_of_read(r)
 		entry = sample_dict.get(basename)
 		
 		if entry is None:
@@ -520,14 +511,14 @@ def prepareReads(folder=".", arePaired=False):
 			sample =  UnpairedReadSample(basename)
 		
 		for read in reads:
-			sample.addRead(read)
+			sample.add_read(read)
 			
 		samples.append(sample)
 	
 	return samples
 	
 	
-def isFastqFile(file):
+def is_fastq_file(file):
 	if file.upper().endswith("FQ") or file.upper().endswith("FASTQ") or file.upper().endswith("FQ.GZ") or file.upper().endswith("FASTQ.GZ") :
 		return True
 	else:
@@ -535,13 +526,13 @@ def isFastqFile(file):
 		
 
 		
-def arePairedReads(folder="."):
+def are_paired_reads(folder="."):
 	foundLeftRead = False
 	foundRightRead = False
 	
 	for file in os.listdir(folder):
 	
-		if isFastqFile(file):
+		if is_fastq_file(file):
 			if "_R1" in file or "Read1" in file or "read1" in file:
 				foundLeftRead = True
 			elif "_R2" in file or "Read2" in file or "read2" in file:
@@ -553,11 +544,11 @@ def arePairedReads(folder="."):
 
 
 
-def checkIfAllPrerequisitesInstalled():
+def check_if_all_prerequisites_installed():
 	print("Checking if the required software is installed...")
-	found_hisat = canRun("hisat2")
-	found_stringtie = canRun("stringtie")
-	found_samtools = canRun("samtools")
+	found_hisat = can_run("hisat2")
+	found_stringtie = can_run("stringtie")
+	found_samtools = can_run("samtools")
 	
 	if not found_hisat:
 		print("HISAT2 does not seem to be installed...")
@@ -606,25 +597,25 @@ if args.version:
 	exit(0) #exit immediately after printing the version
 
 folder = args.outfolder
-folder = assureFolderEndsWithSlash(folder)
+folder = assure_folder_ends_with_slash(folder)
 
 reads_folder = args.reads_folder
-reads_folder = assureFolderEndsWithSlash(reads_folder)
+reads_folder = assure_folder_ends_with_slash(reads_folder)
 
 genome_folder = args.genome_folder
-genome_folder = assureFolderEndsWithSlash(genome_folder)
+genome_folder = assure_folder_ends_with_slash(genome_folder)
 
 threads = str(args.threads)
 
-checkIfAllPrerequisitesInstalled()
+check_if_all_prerequisites_installed()
 
-all_read_files = [f for f in glob.glob(f"{reads_folder}/*") if isFastqFile(f)]
+all_read_files = [f for f in glob.glob(f"{reads_folder}/*") if is_fastq_file(f)]
 if len(all_read_files)==0:
 	print(f"Found no reads in reads folder ({reads_folder})")
 	print("Quitting...")
 	exit(130)
 
-PAIRED = arePairedReads(reads_folder)
+PAIRED = are_paired_reads(reads_folder)
 if PAIRED:
 	print("I found PAIRED reads in the folder. ")
 	paired_correct_answer = "yes" if args.yes else input("Is this correct? (yes/no) ")
@@ -645,7 +636,7 @@ else:
 
 print()
 
-samples = prepareReads(reads_folder, PAIRED) 
+samples = prepare_reads(reads_folder, PAIRED) 
 print("Found the following samples:")
 for sample in samples:
 	print(sample)
@@ -659,7 +650,7 @@ if "n" in samples_correct.lower():
 
 
 print()
-gff_file = getGFFFile(genome_folder)
+gff_file = get_GFF_file(genome_folder)
 if gff_file is None:
 	print("Could not find the GFF file for the genome. Are you sure it's in the genome folder?")
 	print("Quitting..")
@@ -669,18 +660,18 @@ if gff_file is None:
 genome = look_for_genome(genome_folder)
 if genome is not None:
 	if not args.skip_mapping:
-		if not genomeIsAlreadyIndexed(genome_folder):
+		if not genome_is_already_indexed(genome_folder):
 			print("Building the genome index.")
 			print()
 			
-			buildIndex(genome)
+			build_index(genome)
 		else:
 			print("I found a genome index in the genome folder. ")
 			reindex =  "yes" if args.yes else input("Do you want to skip building the index? (yes/no) ")
 			if "n" in reindex.lower():
 				print("Building the genome index.")
 				print()
-				buildIndex(genome)
+				build_index(genome)
 
 else:
 	print("Could not find a genome file in the genomes folder. Exiting")
@@ -691,23 +682,23 @@ print()
 os.makedirs(folder+"mapping", exist_ok=True)
 
 if not args.skip_mapping:
-	mapToGenome(samples, genome, folder+"mapping")
+	map_to_genome(samples, genome, folder+"mapping")
 	if PAIRED:
-		summarizePairedMapping(folder+"mapping")
+		summarize_paired_mapping(folder+"mapping")
 	else:
-		summarizeUnpairedMapping(folder+"mapping")
+		summarize_unpaired_mapping(folder+"mapping")
 	
 	
 print("Converting SAM files to BAM files")	
-convertToBAM(folder+"mapping")
+convert_to_BAM(folder+"mapping")
 print()
 
 
 print("Estimating expression abundance with stringtie")
-runStringtie(gff_file, mapping_folder=folder+"mapping", outfolder=folder+"abundance")	
+run_stringtie(gff_file, mapping_folder=folder+"mapping", outfolder=folder+"abundance")	
 print()
 
-mergeAbundances(folder+"abundance")
+merge_abundances(folder+"abundance")
 
 
 	
