@@ -1,6 +1,6 @@
 #! python
 import os, glob, gzip, re, argparse
-version_string = "HISAT2-pipline v1.0.7 (2024/1) "
+version_string = "HISAT2-pipline v1.0.8 (2024/11) "
 
 class Sample:
 
@@ -86,15 +86,29 @@ class UnpairedReadSample(Sample):
 		
 
 
-def extractGZIP(file):
-	basename = file.split(".gz")[0]
-	
-	with gzip.open(file, "rt") as gzipped:
+def extract_compressed(file):
+	"""Extracts compressed files. Supports gzip, bzip2 and lzma/xz"""
+	basename = file.rsplit(".",1)[0]
+	filehandle = None
+
+
+	if file.lower().endswith("gz") or file.lower().endswith("gzip"):
+		import gzip
+		filehandle = gzip.open(file,'rt')
+
+	elif file.lower().endswith("bz2") or file.lower().endswith("bzip2"):
+		import bz2
+		filehandle = bz2.open(file,'rt')
+
+	elif file.lower().endswith("xz"):
+		import lzma
+		filehandle = lzma.open(file,'rt')
+		
+	if filehandle is not None:
 		with open(basename, "w") as outfile:
-			for line in gzipped:
+			for line in filehandle:
 				outfile.write(line)
-			
-	
+		filehandle.close()
 
 
 def canRun(exe):
@@ -115,25 +129,33 @@ def assureFolderEndsWithSlash(folder):
 	return folder
 	
 
+import os
+import re
 
-def lookForGenome(folder="genome"):
-	fileendings = [".fa", ".fasta", ".fas", ".fna"]
-	
+def assureFolderEndsWithSlash(folder):
+	if not folder.endswith("/") and not folder.endswith("\\"):
+		folder+="/"
+	return folder
+
+
+def look_for_genome(folder="genome"):
+	"""Looks for any fasta file in the folder. If a fasta file cannot be found, the function will look
+	for compressed fasta files, and extract them, returning the uncompressed filepath
+	"""
 	folder = assureFolderEndsWithSlash(folder)
+	fasta_pattern = re.compile(r'(fa|fna|fasta|fas)$')
 	
 	for file in os.listdir(folder):
-		for ending in fileendings:
-			if file.lower().endswith(ending):
-				return folder + file
+		if fasta_pattern.search(file.lower()) is not None:
+			return f"{folder}{file}"
 	
-	#could not find a fasta file. Maybe it is gzipped and needs to be extracted
-	fileendings = [".fa.gz", ".fasta.gz", ".fna.gz"]
+	#could not find a fasta file. Maybe it is compressed and needs to be extracted
+	compressed_pattern = re.compile(r'(fa|fna|fasta|fas)\.(bz2|gz|xz)$')
 	for file in os.listdir(folder):
-		for ending in fileendings:
-			if file.lower().endswith(ending):
-				print("Found a gzipped genome file. Extracting ...")
-				extractGZIP(folder+file)
-				return lookForGenome(folder)
+		if compressed_pattern.search(file.lower()) is not None:
+			print("Found a compressed genome file. Extracting ...")
+			extract_compressed(f"{folder}{file}")
+			return look_for_genome(folder)
 	
 	return None
 
@@ -644,7 +666,7 @@ if gff_file is None:
 	exit(130)
 
 
-genome = lookForGenome(genome_folder)
+genome = look_for_genome(genome_folder)
 if genome is not None:
 	if not args.skip_mapping:
 		if not genomeIsAlreadyIndexed(genome_folder):
