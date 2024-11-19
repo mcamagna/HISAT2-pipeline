@@ -155,12 +155,25 @@ def map_to_genome(samples, genome, mappingFolder):
 		#immediately convert the SAM to BAM
 		convert_to_BAM(mappingFolder)
 
-#TODO: implement support for compressed files
-def get_GFF_file(folder="folder"):
+
+def get_GFF_file(folder="genome"):
+	"""Looks for any gff file in the folder and returns the first one. If a gff file cannot be found, the function will look
+	for compressed gff files, extract them, returning the uncompressed filepath
+	"""
+	folder = assure_folder_ends_with_slash(folder)
+	gff_pattern = re.compile(r'(gff|gtf|gff3)$')
+	
 	for file in os.listdir(folder):
-		if file.lower().endswith("gff") or file.lower().endswith("gtf") or file.lower().endswith("gff3"):
-			folder = assure_folder_ends_with_slash(folder)
-			return folder+file
+		if gff_pattern.search(file.lower()) is not None:
+			return f"{folder}{file}"
+	
+	#could not find a gff file. Maybe it is compressed and needs to be extracted
+	compressed_pattern = re.compile(r'(gff|gtf|gff3)\.(bz2|gz|xz)$')
+	for file in os.listdir(folder):
+		if compressed_pattern.search(file.lower()) is not None:
+			print("Found a compressed gff file. Extracting ...")
+			extract_compressed(f"{folder}{file}")
+			return get_GFF_file(folder)
 	
 	return None
 
