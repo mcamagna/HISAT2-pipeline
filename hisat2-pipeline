@@ -494,9 +494,9 @@ def prepare_reads(folder=".", arePaired=False):
 	return samples
 	
 
-#TODO: Hisat2 supports .bz2 compressed files, so they should be supported as well
 def is_fastq_file(file):
-	if file.upper().endswith("FQ") or file.upper().endswith("FASTQ") or file.upper().endswith("FQ.GZ") or file.upper().endswith("FASTQ.GZ") :
+	fastq_pattern = re.compile(r'(fq|fastq)(\.gz|\.bz2)?$')
+	if fastq_pattern.search(file.lower()) is not None:
 		return True
 	else:
 		return False
