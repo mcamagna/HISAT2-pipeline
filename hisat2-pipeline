@@ -1,6 +1,6 @@
 #! python
 import os, glob, gzip, re, argparse
-version_string = "HISAT2-pipline v1.0.8 (2024/11) "
+version_string = "HISAT2-pipline v1.1.0 (2025/06) "
 
 class Sample:
 
@@ -179,12 +179,9 @@ def get_GFF_file(folder="genome"):
 
 
 
-def run_stringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
+def run_stringtie(gff_file, mapping_folder="mapping", outfolder="abundance"):
 	if not os.path.exists(outfolder):
 		os.mkdir(outfolder)
-		
-	mapping_folder = assure_folder_ends_with_slash(mapping_folder)
-	outfolder = assure_folder_ends_with_slash(outfolder)
 	
 	
 	for file in os.listdir(mapping_folder):
@@ -192,9 +189,9 @@ def run_stringtie(gff_file, mapping_folder="mapping", outfolder="abundance/"):
 			continue
 		name = file.split(".bam")[0].split(".sam")[0]
 		
-		cmd = f"stringtie -e -B -p {threads} {mapping_folder+file} -G {gff_file}"
-		cmd+= f" -A {outfolder + name}/{name}_gene_expression.tsv"
-		cmd+= f" -o {outfolder+name}/{name}.gtf"
+		cmd = f"stringtie -e -B -p {threads} {mapping_folder}/{file} -G {gff_file}"
+		cmd+= f" -A {outfolder}/{name}/{name}_gene_expression.tsv"
+		cmd+= f" -o {outfolder}/{name}/{name}.gtf"
 		
 		print(cmd)
 		os.system(cmd)
@@ -210,16 +207,13 @@ def genome_is_already_indexed(folder="genome"):
 
 
 def get_all_reads_in_folder(folder="reads"):
-	reads = []
-	for file in os.listdir(folder):
-		if is_fastq_file(file):
-			reads.append(file)
-	return reads		
+	return [file for file in glob.glob(f"{folder}/**/*", recursive=True) if is_fastq_file(file)]
 	
 	
 
 def get_basename_of_read(read):
-	basename = read.split(".fa")[0]
+	basename = read.split("/")[-1]
+	basename = basename.split(".fa")[0]
 	basename = basename.split(".fq")[0]
 	
 	basename = basename.split("_R1")[0]
@@ -238,7 +232,6 @@ def get_basename_of_read(read):
 def read_all_mapping_summaries(folder="./mapping"):
 	'''Reads all *_summary.txt files in a folder and returns a list
 	 of the sample names, and a list of the text in the summary files.'''
-	folder = assure_folder_ends_with_slash(folder)
 	names = []
 	summaries = []
 	
@@ -246,7 +239,7 @@ def read_all_mapping_summaries(folder="./mapping"):
 		if not file.endswith("summary.txt"):
 			continue
 		
-		with open(folder+file, "r") as summary:
+		with open(f"{folder}/{file}", "r") as summary:
 			names.append(file.split("_summary")[0])
 			text = ""
 			for line in summary:
@@ -282,8 +275,6 @@ def summarize_paired_mapping(folder="./mapping"):
 	except:
 		print("Warning: Could not create a summary of the mapping. Is pandas installed?")
 		return
-	
-	folder = assure_folder_ends_with_slash(folder)
 	
 	names, summaries = read_all_mapping_summaries(folder)
 	data = dict()
@@ -329,11 +320,11 @@ def summarize_paired_mapping(folder="./mapping"):
 	df = pd.DataFrame(data)
 	df.set_index("Sample", inplace=True)
 	try:
-		df.to_csv(folder+"mapping_summary.tsv",sep="\t", lineterminator='\n') #lineterminator was specifed due to a bug under MacOS
+		df.to_csv(f"{folder}/mapping_summary.tsv",sep="\t", lineterminator='\n') #lineterminator was specifed due to a bug under MacOS
 	except:
-		df.to_csv(folder+"mapping_summary.tsv",sep="\t", line_terminator='\n') #for older versions of pandas
+		df.to_csv(f"{folder}/mapping_summary.tsv",sep="\t", line_terminator='\n') #for older versions of pandas
 	try:
-		df.to_excel(folder+"mapping_summary.xlsx")
+		df.to_excel(f"{folder}/mapping_summary.xlsx")
 	except:
 		pass
 	
@@ -346,8 +337,6 @@ def summarize_unpaired_mapping(folder="./mapping"):
 	except:
 		print("Warning: Could not create a summary of the mapping. Is pandas installed?")
 		return
-	
-	folder = assure_folder_ends_with_slash(folder)
 	
 	names, summaries = read_all_mapping_summaries(folder)
 	data = dict()
@@ -375,9 +364,9 @@ def summarize_unpaired_mapping(folder="./mapping"):
 	
 	df = pd.DataFrame(data)
 	df.set_index("Sample", inplace=True)
-	df.to_csv(folder+"mapping_summary.tsv",sep="\t")
+	df.to_csv(f"{folder}/mapping_summary.tsv",sep="\t")
 	try:
-		df.to_excel(folder+"mapping_summary.xlsx")
+		df.to_excel(f"{folder}/mapping_summary.xlsx")
 	except:
 		pass
 	
@@ -477,18 +466,11 @@ def convert_to_BAM(folder):
 def prepare_reads(folder=".", arePaired=False):
 	reads = get_all_reads_in_folder(folder)
 	sample_dict = dict()
-	folder = assure_folder_ends_with_slash(folder)
 	
-	for r in reads:
-		basename = get_basename_of_read(r)
-		entry = sample_dict.get(basename)
-		
-		if entry is None:
-			entry = [folder+r]
-		else:
-			entry.append(folder+r)
-		
-		sample_dict[basename] = entry
+	for read in reads:
+		basename = get_basename_of_read(read)
+		entry = sample_dict.setdefault(basename, [])
+		entry.append(read)
 	
 	
 	samples = []
@@ -519,13 +501,13 @@ def is_fastq_file(file):
 def are_paired_reads(folder="."):
 	foundLeftRead = False
 	foundRightRead = False
-	
-	for file in os.listdir(folder):
+
+	for file in glob.glob(f"{folder}/**/*", recursive=True):
 	
 		if is_fastq_file(file):
-			if "_R1" in file or "Read1" in file or "read1" in file:
+			if "_R1" in file or "READ1" in file.upper():
 				foundLeftRead = True
-			elif "_R2" in file or "Read2" in file or "read2" in file:
+			elif "_R2" in file or "READ2" in file.upper():
 				foundRightRead = True
 
 		if foundLeftRead and foundRightRead:
@@ -590,7 +572,6 @@ folder = args.outfolder
 folder = assure_folder_ends_with_slash(folder)
 
 reads_folder = args.reads_folder
-reads_folder = assure_folder_ends_with_slash(reads_folder)
 
 genome_folder = args.genome_folder
 genome_folder = assure_folder_ends_with_slash(genome_folder)
@@ -599,7 +580,8 @@ threads = str(args.threads)
 
 check_if_all_prerequisites_installed()
 
-all_read_files = [f for f in glob.glob(f"{reads_folder}/*") if is_fastq_file(f)]
+all_read_files = [f for f in glob.glob(f"{reads_folder}/**/*", recursive=True) if is_fastq_file(f)]
+
 if len(all_read_files)==0:
 	print(f"Found no reads in reads folder ({reads_folder})")
 	print("Quitting...")
