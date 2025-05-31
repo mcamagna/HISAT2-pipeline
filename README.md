@@ -46,7 +46,7 @@ This pipeline uses the default parameters for HISAT2 and Stringtie, but addition
 ```
 hisat2-pipline --hisat_options "--very-sensitive --no-spliced-alignment" --stringtie_options "-m 150 -t"
 ```
-<br>To see all run parameters, use:
+To see all run parameters, use:
 ```
 hisat2-pipline -h
 ```
