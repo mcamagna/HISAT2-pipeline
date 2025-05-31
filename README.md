@@ -42,7 +42,11 @@ You can manually specify the reads, genome and output folders via:
 ```
 hisat2-pipline --reads_folder [YOUR_READS_FOLDER] --genome_folder [YOUR_GENOME_FOLDER] --outfolder [YOUR_OUTPUT_FOLDER]
 ```
-To see all run parameters , please run
+This pipeline uses the default parameters for HISAT2 and Stringtie, but additional options can be specified. The example below shows how:
+```
+hisat2-pipline --hisat_options "--very-sensitive --no-spliced-alignment" --stringtie_options "-m 150 -t"
+```
+<br>To see all run parameters, use:
 ```
 hisat2-pipline -h
 ```

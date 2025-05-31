@@ -558,7 +558,7 @@ parser.add_argument("--outfolder", help="The folder where the results will be wr
 parser.add_argument("--skip_mapping", help="Skip mapping to genome", action="store_true")
 parser.add_argument("--threads", help=f"The number of threads used (default={os.cpu_count()})", default=f"{os.cpu_count()}")
 parser.add_argument("--hisat_options", nargs=1, help=f'May be used to pass additional options to HISAT2. Provided parameters must be surrounded by quotation marks, e.g. --hisat_options "--very-sensitive --no-spliced-alignment"',required=False, default=[])
-parser.add_argument("--stringtie_options", nargs=1, help=f'May be used to pass additional options to Stringtie. Provided parameters must be surrounded by quotation marks, e.g. --hisat_options "-m 150 -t"',required=False, default=[])
+parser.add_argument("--stringtie_options", nargs=1, help=f'May be used to pass additional options to Stringtie. Provided parameters must be surrounded by quotation marks, e.g. --stringtie_options "-m 150 -t"',required=False, default=[])
 parser.add_argument("--yes", help="Answer all questions with 'yes'", action='store_true')
 parser.add_argument("--version", help="Prints the current version'", action='store_true')
 
