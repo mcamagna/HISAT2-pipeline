@@ -146,7 +146,8 @@ def map_to_genome(samples, genome, mappingFolder):
 	mappingFolder = assure_folder_ends_with_slash(mappingFolder)
 	
 	for sample in samples:
-		cmd = f"hisat2 -x {str(genome_basename)} --threads {threads} {sample.get_hisat_string()}"
+
+		cmd = f"hisat2 {hisat_options} -x {str(genome_basename)} --threads {threads} {sample.get_hisat_string()}"
 		cmd+= f" -S {mappingFolder + sample.get_name()}.sam"
 		cmd+= f" --new-summary --summary-file {mappingFolder + sample.get_name()}_summary.txt"
 		
@@ -189,7 +190,7 @@ def run_stringtie(gff_file, mapping_folder="mapping", outfolder="abundance"):
 			continue
 		name = file.split(".bam")[0].split(".sam")[0]
 		
-		cmd = f"stringtie -e -B -p {threads} {mapping_folder}/{file} -G {gff_file}"
+		cmd = f"stringtie {stringtie_options} -e -B -p {threads} {mapping_folder}/{file} -G {gff_file}"
 		cmd+= f" -A {outfolder}/{name}/{name}_gene_expression.tsv"
 		cmd+= f" -o {outfolder}/{name}/{name}.gtf"
 		
@@ -556,6 +557,8 @@ parser.add_argument("--genome_folder", help="The folder where the genome fasta a
 parser.add_argument("--outfolder", help="The folder where the results will be written to (default=./)", default="./")
 parser.add_argument("--skip_mapping", help="Skip mapping to genome", action="store_true")
 parser.add_argument("--threads", help=f"The number of threads used (default={os.cpu_count()})", default=f"{os.cpu_count()}")
+parser.add_argument("--hisat_options", nargs=1, help=f'May be used to pass additional options to HISAT2. Provided parameters must be surrounded by quotation marks, e.g. --hisat_options "--very-sensitive --no-spliced-alignment"',required=False, default=[])
+parser.add_argument("--stringtie_options", nargs=1, help=f'May be used to pass additional options to Stringtie. Provided parameters must be surrounded by quotation marks, e.g. --hisat_options "-m 150 -t"',required=False, default=[])
 parser.add_argument("--yes", help="Answer all questions with 'yes'", action='store_true')
 parser.add_argument("--version", help="Prints the current version'", action='store_true')
 
@@ -577,6 +580,10 @@ genome_folder = args.genome_folder
 genome_folder = assure_folder_ends_with_slash(genome_folder)
 
 threads = str(args.threads)
+
+hisat_options = "" if len(args.hisat_options) == 0 else args.hisat_options[0]
+stringtie_options = "" if len(args.stringtie_options) == 0 else args.stringtie_options[0]
+
 
 check_if_all_prerequisites_installed()
 
