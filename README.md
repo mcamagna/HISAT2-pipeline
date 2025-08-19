@@ -1,5 +1,5 @@
 # HISAT2-pipeline [![DOI](https://zenodo.org/badge/475739892.svg)](https://zenodo.org/badge/latestdoi/475739892)
-This pipeline runs a RNA-seq analysis automatically, using HISAT2/Stringtie with default settings. The pipeline should be particularly useful for people who lack the necessary skills to script their own pipeline or people who run RNA-seqs frequently. Please note, that it will not trim your reads, as modern mappers such as HISAT2 can handle untrimmed reads very well in almost all cases. If you wish to trim your reads anyways, please do so before running this pipline.
+This pipeline runs a RNA-seq analysis automatically, using HISAT2/Stringtie with default settings. The pipeline should be particularly useful for people who lack the necessary skills to script their own pipeline or people who run RNA-seqs frequently. Please note, that it will not trim your reads, as modern mappers such as HISAT2 can handle untrimmed reads very well in almost all cases. If you wish to trim your reads anyways, please do so before running this pipeline.
 
 ## 1. Installation:
 The preferred way to install the pipeline is via (bio)conda, as this will also install all required dependencies. Simply run the following command to install the pipeline:
@@ -28,7 +28,7 @@ The *genome* will have to contain the **genome fasta file** (can be gzipped), as
 <br><br>
 Then simply run the following command to run the analysis:
 ```
-hisat2-pipline
+hisat2-pipeline
 ```
 
 The pipeline will ask you for feedback before proceeding to the actual analysis, to confirm whether it was able to infer all settings correctly.
@@ -40,15 +40,15 @@ Gene expression values are found in the folder *./abundance*, as well as the mer
 ## 3. Advanced parameters
 You can manually specify the reads, genome and output folders via:
 ```
-hisat2-pipline --reads_folder [YOUR_READS_FOLDER] --genome_folder [YOUR_GENOME_FOLDER] --outfolder [YOUR_OUTPUT_FOLDER]
+hisat2-pipeline --reads_folder [YOUR_READS_FOLDER] --genome_folder [YOUR_GENOME_FOLDER] --outfolder [YOUR_OUTPUT_FOLDER]
 ```
 This pipeline uses the default parameters for HISAT2 and Stringtie, but additional options can be specified. The example below shows how:
 ```
-hisat2-pipline --hisat_options "--very-sensitive --no-spliced-alignment" --stringtie_options "-m 150 -t"
+hisat2-pipeline --hisat_options "--very-sensitive --no-spliced-alignment" --stringtie_options "-m 150 -t"
 ```
 To see all run parameters, use:
 ```
-hisat2-pipline -h
+hisat2-pipeline -h
 ```
 
 ## 4. Citing
