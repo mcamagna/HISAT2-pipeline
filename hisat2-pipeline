@@ -1,6 +1,6 @@
 #! python
 import os, glob, gzip, re, argparse
-version_string = "HISAT2-pipline v1.1.0 (2025/06) "
+version_string = "HISAT2-pipline v1.1.1 (2025/08) "
 
 class Sample:
 
@@ -166,8 +166,15 @@ def get_GFF_file(folder="genome"):
 	return None
 
 
+def sanitize_path(path):
+	"""Sanitizes paths and removes problematic symbols"""
+	return path.replace("//", "/").rstrip("/")
+
 
 def run_stringtie(gff_file, mapping_folder="mapping", outfolder="abundance"):
+	mapping_folder = sanitize_path(mapping_folder)
+	outfolder = sanitize_path(outfolder)
+	
 	if not os.path.exists(outfolder):
 		os.mkdir(outfolder)
 	
@@ -534,11 +541,11 @@ print("")
 if args.version:
 	exit(0) #exit immediately after printing the version
 
-folder = args.outfolder
+folder = sanitize_path(args.outfolder)
 
-reads_folder = args.reads_folder
+reads_folder = sanitize_path(args.reads_folder)
 
-genome_folder = args.genome_folder
+genome_folder = sanitize_path(args.genome_folder)
 
 threads = int(args.threads)
 
